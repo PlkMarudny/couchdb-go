@@ -808,17 +808,18 @@ type FindQueryParams struct {
 	UseIndex interface{} `json:"user_index,omitempty"`
 }
 
-func (db *Database) Find(results interface{}, params *FindQueryParams) error {
+func (db *Database) Find(params *FindQueryParams) ([]byte, error) {
 	var err error
 	var url string
+	var results []byte
 	url, err = buildUrl(db.dbName, "_find")
 	if err != nil {
-		return err
+		return results, err
 	}
 
 	requestBody, numBytes, err := encodeData(params)
 	if err != nil {
-		return err
+		return results, err
 	}
 
 	var headers = make(map[string]string)
@@ -828,15 +829,15 @@ func (db *Database) Find(results interface{}, params *FindQueryParams) error {
 
 	resp, err := db.connection.request("POST", url, requestBody, headers, db.auth)
 	if err != nil {
-		return err
+		return results, err
 	}
 	defer resp.Body.Close()
 
 	err = parseBody(resp, &results)
 	if err != nil {
-		return err
+		return results, err
 	}
-	return nil
+	return results, nil
 }
 
 //Save a design document.
